@@ -6,66 +6,61 @@ import com.esun.socialmedia.common.util.SecurityUtils;
 import com.esun.socialmedia.domain.dto.request.LoginRequest;
 import com.esun.socialmedia.domain.dto.request.RegisterRequest;
 import com.esun.socialmedia.domain.dto.response.LoginResponse;
+import com.esun.socialmedia.domain.entity.User;
 import com.esun.socialmedia.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthService implements IAuthService {
 
     private final UserRepository userRepository;
     private final SecurityUtils  securityUtils;
     private final JwtUtils       jwtUtils;
 
     public Long register(RegisterRequest req) {
-        String salt     = securityUtils.generateSalt();
-        String hashPwd  = securityUtils.hashPassword(req.getPassword(), salt);
-        String safeName = securityUtils.sanitize(req.getUserName());
+        if (userRepository.existsByPhoneAndDeletedFalse(req.getPhone())) {
+            throw new BusinessException(HttpStatus.CONFLICT, "此手機號碼已被註冊");
+        }
+
         String safeEmail = req.getEmail() != null && !req.getEmail().isBlank()
                 ? securityUtils.sanitize(req.getEmail()) : null;
 
-        if (safeEmail != null && userRepository.emailExists(safeEmail)) {
+        if (safeEmail != null && userRepository.existsByEmailAndDeletedFalse(safeEmail)) {
             throw new BusinessException(HttpStatus.CONFLICT, "此電子郵件已被使用");
         }
 
-        Map<String, Object> out = userRepository.register(
-                req.getPhone(), safeName, safeEmail, hashPwd, salt);
+        String salt    = securityUtils.generateSalt();
+        String hashPwd = securityUtils.hashPassword(req.getPassword(), salt);
 
-        int result = (Integer) out.get("result");
-        if (result == 1) {
-            throw new BusinessException(HttpStatus.CONFLICT, "此手機號碼已被註冊");
-        }
-        if (result != 0) {
-            throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, "註冊失敗，請稍後再試");
-        }
-        return (Long) out.get("userId");
+        User user = new User();
+        user.setPhone(req.getPhone());
+        user.setUserName(securityUtils.sanitize(req.getUserName()));
+        user.setEmail(safeEmail);
+        user.setPassword(hashPwd);
+        user.setSalt(salt);
+
+        return userRepository.save(user).getUserId();
     }
 
     public LoginResponse login(LoginRequest req) {
-        Map<String, Object> user = userRepository.findByPhone(req.getPhone())
+        User user = userRepository.findByPhoneAndDeletedFalse(req.getPhone())
                 .orElseThrow(() -> new BusinessException(HttpStatus.UNAUTHORIZED, "手機號碼或密碼錯誤"));
 
-        String storedHash = (String) user.get("password");
-        String salt       = (String) user.get("salt");
-
-        if (!securityUtils.verifyPassword(req.getPassword(), salt, storedHash)) {
+        if (!securityUtils.verifyPassword(req.getPassword(), user.getSalt(), user.getPassword())) {
             throw new BusinessException(HttpStatus.UNAUTHORIZED, "手機號碼或密碼錯誤");
         }
 
-        Long   userId   = (Long)   user.get("userId");
-        String phone    = (String) user.get("phone");
-        String userName = (String) user.get("userName");
-        String token    = jwtUtils.generateToken(userId, phone);
+        String token = jwtUtils.generateToken(user.getUserId(), user.getPhone());
 
         return LoginResponse.builder()
-                .userId(userId)
-                .userName(userName)
-                .phone(phone)
+                .userId(user.getUserId())
+                .userName(user.getUserName())
+                .phone(user.getPhone())
                 .token(token)
                 .build();
     }
 }
+

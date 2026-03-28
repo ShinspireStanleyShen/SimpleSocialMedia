@@ -3,7 +3,7 @@ package com.esun.socialmedia.controller;
 import com.esun.socialmedia.common.response.ApiResponse;
 import com.esun.socialmedia.domain.dto.request.CommentRequest;
 import com.esun.socialmedia.domain.dto.response.CommentResponse;
-import com.esun.socialmedia.service.CommentService;
+import com.esun.socialmedia.service.ICommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CommentController {
 
-    private final CommentService commentService;
+    private final ICommentService commentService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<CommentResponse>>> listComments(

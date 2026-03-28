@@ -4,7 +4,7 @@ import com.esun.socialmedia.common.response.ApiResponse;
 import com.esun.socialmedia.domain.dto.request.LoginRequest;
 import com.esun.socialmedia.domain.dto.request.RegisterRequest;
 import com.esun.socialmedia.domain.dto.response.LoginResponse;
-import com.esun.socialmedia.service.AuthService;
+import com.esun.socialmedia.service.IAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final IAuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Map<String, Object>>> register(

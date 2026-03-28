@@ -3,7 +3,7 @@ package com.esun.socialmedia.controller;
 import com.esun.socialmedia.common.response.ApiResponse;
 import com.esun.socialmedia.domain.dto.request.PostRequest;
 import com.esun.socialmedia.domain.dto.response.PostResponse;
-import com.esun.socialmedia.service.PostService;
+import com.esun.socialmedia.service.IPostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PostController {
 
-    private final PostService postService;
+    private final IPostService postService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PostResponse>>> listPosts() {
