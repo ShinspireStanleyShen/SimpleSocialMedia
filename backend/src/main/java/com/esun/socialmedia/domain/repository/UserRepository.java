@@ -2,6 +2,7 @@ package com.esun.socialmedia.domain.repository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.ParameterMode;
+import jakarta.persistence.Query;
 import jakarta.persistence.StoredProcedureQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -40,6 +41,18 @@ public class UserRepository {
         out.put("userId", q.getOutputParameterValue("p_user_id"));
         out.put("result", q.getOutputParameterValue("p_result"));
         return out;
+    }
+
+    /**
+     * 檢查 email 是否已被使用
+     */
+    public boolean emailExists(String email) {
+        if (email == null || email.isBlank()) return false;
+        Query q = em.createNativeQuery(
+                "SELECT COUNT(*) FROM users WHERE email = :email AND is_deleted = 0");
+        q.setParameter("email", email);
+        Number count = (Number) q.getSingleResult();
+        return count.longValue() > 0;
     }
 
     /**

@@ -5,7 +5,8 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/HomeView.vue')
+    component: () => import('@/views/HomeView.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/login',
@@ -23,7 +24,8 @@ const routes = [
     path: '/posts/:postId',
     name: 'PostDetail',
     component: () => import('@/views/PostDetailView.vue'),
-    props: true
+    props: true,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -35,6 +37,9 @@ const router = createRouter({
 // 導航守衛
 router.beforeEach((to) => {
   const auth = useAuthStore()
+  if (to.meta.requiresAuth && !auth.isLoggedIn) {
+    return { name: 'Login' }
+  }
   if (to.meta.guestOnly && auth.isLoggedIn) {
     return { name: 'Home' }
   }

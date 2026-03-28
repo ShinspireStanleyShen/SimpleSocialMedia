@@ -25,7 +25,12 @@ public class AuthService {
         String salt     = securityUtils.generateSalt();
         String hashPwd  = securityUtils.hashPassword(req.getPassword(), salt);
         String safeName = securityUtils.sanitize(req.getUserName());
-        String safeEmail = req.getEmail() != null ? securityUtils.sanitize(req.getEmail()) : null;
+        String safeEmail = req.getEmail() != null && !req.getEmail().isBlank()
+                ? securityUtils.sanitize(req.getEmail()) : null;
+
+        if (safeEmail != null && userRepository.emailExists(safeEmail)) {
+            throw new BusinessException(HttpStatus.CONFLICT, "此電子郵件已被使用");
+        }
 
         Map<String, Object> out = userRepository.register(
                 req.getPhone(), safeName, safeEmail, hashPwd, salt);

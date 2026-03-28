@@ -30,7 +30,7 @@
           <label>電子郵件（選填）</label>
           <input
             v-model="form.email"
-            type="email"
+            type="text"
             placeholder="example@email.com"
             maxlength="255"
           />
